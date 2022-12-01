@@ -2,24 +2,24 @@ use std::time::Instant;
 
 use crate::file_handler::FileHandler;
 
-pub struct DayXX {}
+pub struct Day02 {}
 
-impl DayXX{
+impl Day02{
     pub fn run() -> (String, String, String, u128, u128) {
-        let first_input = FileHandler::read("./src/inputs/day_XX_1.txt");
+        let first_input = FileHandler::read("./src/inputs/day_02_1.txt");
 
         let lines: Vec<&str> = first_input.split('\n').collect();
 
         let start_1 = Instant::now();
-        let result_1 = DayXX::part_01(&lines);
+        let result_1 = Day02::part_01(&lines);
         let time_calculation_1 = start_1.elapsed();
 
         let start_2 = Instant::now();
-        let result_2 = DayXX::part_02(&lines);
+        let result_2 = Day02::part_02(&lines);
         let time_calculation_2 = start_2.elapsed();
 
         (
-            "Day_XX".to_owned(),
+            "Day_02".to_owned(),
             format!("{}", result_1),
             format!("{}", result_2),
             time_calculation_1.as_nanos(),
