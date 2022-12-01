@@ -7,8 +7,7 @@ pub mod days;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    // c.bench_function("Day_01", |b| b.iter(|| days::day_1::Day01::run()));
-   
+    c.bench_function("Day_01", |b| b.iter(|| days::day_01::Day01::run()));
 }
 
 criterion_group!(benches, criterion_benchmark);
