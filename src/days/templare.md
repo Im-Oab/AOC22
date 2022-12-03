@@ -4,7 +4,7 @@ use crate::file_handler::FileHandler;
 
 pub struct DayXX {}
 
-impl DayXX{
+impl DayXX {
     pub fn run() -> (String, String, String, u128, u128) {
         let first_input = FileHandler::read("./src/inputs/day_XX_1.txt");
 
@@ -28,12 +28,26 @@ impl DayXX{
     }
 
     fn part_01(lines: &Vec<&str>) -> i32 {
-
         return 0;
     }
 
     fn part_02(lines: &Vec<&str>) -> i32 {
-
         return 0;
     }
+}
+
+const TEST_INPUT: &str = "";
+
+#[test]
+fn test_part_1() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = DayXX::part_01(&lines);
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn test_part_2() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = DayXX::part_02(&lines);
+    assert_eq!(result, 0);
 }

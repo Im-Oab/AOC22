@@ -122,3 +122,24 @@ impl Day03 {
         return total_value;
     }
 }
+
+const TEST_INPUT: &str = "vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw";
+
+#[test]
+fn test_part_1() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day03::part_01(&lines);
+    assert_eq!(result, 157);
+}
+
+#[test]
+fn test_part_2() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day03::part_02(&lines);
+    assert_eq!(result, 70);
+}

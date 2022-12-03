@@ -2,6 +2,8 @@ use std::time::Instant;
 
 use crate::file_handler::FileHandler;
 
+use super::day_03::Day03;
+
 #[derive(Clone, Copy)]
 enum RPS {
     Rock,
@@ -137,4 +139,22 @@ impl Day02 {
             }
         }
     }
+}
+
+const TEST_INPUT: &str = "A Y
+B X
+C Z";
+
+#[test]
+fn test_part_1() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day02::part_01(&lines);
+    assert_eq!(result, 15);
+}
+
+#[test]
+fn test_part_2() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day02::part_02(&lines);
+    assert_eq!(result, 12);
 }
