@@ -84,7 +84,7 @@ impl Day02 {
     //  A for Rock, B for Paper, and C for Scissors.
     // X for Rock, Y for Paper, and Z for Scissors
     fn convert_input(input: &str) -> self::RPS {
-        match (input) {
+        match input {
             "A" | "X" => RPS::Rock,
             "B" | "Y" => RPS::Paper,
             _ => RPS::Scissor,
