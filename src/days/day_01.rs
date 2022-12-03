@@ -62,11 +62,41 @@ impl Day01 {
                 total_calories = 0;
             }
         }
-
+        calories.push(total_calories);
         calories.sort();
+
         // take last 3 values of sorted list and sum.
         let total_sum_of_calories = calories.iter().rev().take(3).sum();
 
         return total_sum_of_calories;
     }
+}
+
+const TEST_INPUT: &str = "1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000";
+
+#[test]
+fn test_part_1() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day01::part_01(&lines);
+    assert_eq!(result, 24000);
+}
+
+#[test]
+fn test_part_2() {
+    let lines: Vec<&str> = TEST_INPUT.lines().collect();
+    let result = Day01::part_02(&lines);
+    assert_eq!(result, 45000);
 }
