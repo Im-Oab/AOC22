@@ -2,8 +2,6 @@ use std::time::Instant;
 
 use crate::file_handler::FileHandler;
 
-use super::day_03::Day03;
-
 #[derive(Clone, Copy)]
 enum RPS {
     Rock,
