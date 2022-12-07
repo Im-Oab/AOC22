@@ -9,7 +9,8 @@ fn main() {
     // print_result(crate::days::day_04::Day04::run());
     // print_result(crate::days::day_05::Day05::run());
     // print_result(crate::days::day_06::Day06::run());
-    print_result(crate::days::day_07::Day07::run());
+    // print_result(crate::days::day_07::Day07::run());
+    print_result(crate::days::day_08::Day08::run());
 }
 
 fn print_result(result: (String, String, String, u128, u128)) {
