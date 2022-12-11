@@ -10,6 +10,7 @@ itertools = "0.8"
 hashbrown = "0.11.2"
 cached = "0.26.2"
 
+
 [dev-dependencies]
 criterion = "0.3"
 
