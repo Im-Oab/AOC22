@@ -1,7 +1,9 @@
-use std::{collections::{HashSet, VecDeque}, time::Instant};
+use std::{
+    collections::{HashSet, VecDeque},
+    time::Instant,
+};
 
 use crate::file_handler::FileHandler;
-
 
 #[derive(Clone, PartialEq)]
 enum Direction {
@@ -35,15 +37,51 @@ impl Day12 {
         )
     }
 
-    fn part_01(lines: &Vec<&str>) -> i32 {
-        let (grid, start, end) = parsing(lines);
-        println!("Start: {:?}\nTarget: {:?}\n\n", start, end);
-        
-        return 0;
+    /// After reading the puzzle, I knew it needed to do the shortest path, Instead of using the existing algorithms.
+    /// I wanted to implement my own. It took me 2 hours, and it ended up a failure. :')
+    /// In the end, I implemented the BFS to solve the puzzle.
+    fn part_01(lines: &Vec<&str>) -> usize {
+        let (grid, width, height, start, end) = parsing(lines);
+        println!("Start: {:?}\nTarget: {:?}\n", start, end);
+        let parents = bfs(&grid, width as usize * height as usize, start.clone());
+
+        println!("Finish bfs: {} nodes", parents.len());
+        let start_index = start.1 * width + start.0;
+        let end_index = end.1 * width + end.0;
+        let path = construct_path(
+            parents,
+            width as usize,
+            start_index as usize,
+            end_index as usize,
+        );
+
+        return path.1.len();
     }
 
-    fn part_02(lines: &Vec<&str>) -> i32 {
-        return 0;
+    /// Part 2 is quite easy, instead of the initial starting point. It just needs to find the best starting point.
+    /// So, I modified the code from part 1 and did a brute-force by searching for the best one by calculating the shortest part of all nodes.
+    fn part_02(lines: &Vec<&str>) -> usize {
+        let (grid, width, height, _, end) = parsing(lines);
+        let starting_points = find_starting_points(&grid);
+
+        let mut min_steps = usize::MAX;
+        for start in starting_points.iter() {
+            let parents = bfs(&grid, width as usize * height as usize, start.clone());
+
+            let start_index = start.1 * width + start.0;
+            let end_index = end.1 * width + end.0;
+            let path = construct_path(
+                parents,
+                width as usize,
+                start_index as usize,
+                end_index as usize,
+            );
+            if path.0 == true && min_steps > path.1.len() {
+                min_steps = path.1.len();
+            }
+        }
+
+        return min_steps;
     }
 }
 
@@ -64,44 +102,107 @@ fn test_part_1() {
 fn test_part_2() {
     let lines: Vec<&str> = TEST_INPUT.lines().collect();
     let result = Day12::part_02(&lines);
-    assert_eq!(result, 0);
+    assert_eq!(result, 29);
 }
 
-// TODO: continue implement dijkstra.
-fn dijkstra(graph : &Vec<Vec<i32>>, total_nodes: i32, start: (i32,i32))
-{
-    let count = total_nodes as usize;
-    let mut visitedVertex = vec![false; count];
-    let mut distances = vec![i32::MAX; count];
-    
-    distances[]
-    for i in 0..count
-    {
-        let u = find_min_distance(&distances, &visitedVertex);
-        visitedVertex[u as usize] = true;
+fn find_starting_points(grid: &Vec<Vec<i32>>) -> Vec<(i32, i32)> {
+    let mut result = vec![];
+    let a = 'a' as i32;
+    let mut pos = (0, 0);
+    for row in grid.iter() {
+        pos.0 = 0;
+        for value in row.iter() {
+            if *value == a {
+                result.push(pos.clone());
+            }
+            pos.0 += 1;
+        }
+        pos.1 += 1;
+    }
 
-        for v in 0..count
-        {
-            if visitedVertex[v] == false && graph[u][v] != 0 && (distances[u] + graph[u][v] < distances[v]) {
-                distances[v]
+    result
+}
+
+fn construct_path(
+    parents: Vec<Option<(i32, i32)>>,
+    width: usize,
+    start: usize,
+    end: usize,
+) -> (bool, Vec<(i32, i32)>) {
+    let mut path = vec![];
+    let mut current_node = parents[end];
+    let mut found_start_node = false;
+
+    loop {
+        match current_node {
+            Some((x, y)) => {
+                path.push((x, y));
+
+                let index = y as usize * width + x as usize;
+                current_node = parents[index];
+
+                if start == index {
+                    found_start_node = true;
+                }
+            }
+            None => break,
+        }
+    }
+
+    (found_start_node, path)
+}
+
+fn bfs(grid: &Vec<Vec<i32>>, total_nodes: usize, start: (i32, i32)) -> Vec<Option<(i32, i32)>> {
+    let width = total_nodes / grid.len();
+    let height = grid.len();
+    let start_index = start.1 as usize * width + start.0 as usize;
+
+    let mut queue = VecDeque::new();
+    let mut visited = vec![false; total_nodes];
+    visited[start_index] = true;
+
+    let mut parents: Vec<Option<(i32, i32)>> = vec![None; total_nodes];
+    let mut total_visited = 1;
+    queue.push_back(start);
+    while queue.len() > 0 {
+        let current_node = queue.pop_front().unwrap();
+        let neighbours = get_neighbours(grid, current_node.clone());
+        for (x, y) in neighbours.iter() {
+            let index = (*y as usize * width) + *x as usize;
+            if visited[index] == false {
+                visited[index] = true;
+                parents[index] = Some(current_node.clone());
+                queue.push_back((*x, *y));
+
+                total_visited += 1;
             }
         }
     }
+
+    parents
 }
 
-fn find_min_distance(distances : &Vec<i32>, visited: &Vec<bool>) -> i32{
-    let mut min_distance = i32::MAX;
-    let mut min_distance_vertex = -1;
-    for i in 0..distances.len()
-    {
-        if visited[i] == false && distances[i] < min_distance
+fn get_neighbours(grid: &Vec<Vec<i32>>, pos: (i32, i32)) -> Vec<(i32, i32)> {
+    let mut result = vec![];
+    if let Some(current_value) = grid_value(grid, pos) {
+        for direction in [
+            Direction::Down,
+            Direction::Up,
+            Direction::Left,
+            Direction::Right,
+        ]
+        .iter()
         {
-            min_distance = distances[i].clone();
-            min_distance_vertex = i as i32;
+            let next_pos = get_next_position(pos, direction.clone());
+            if let Some(value) = grid_value(grid, next_pos) {
+                if current_value == value || current_value + 1 == value || current_value > value {
+                    result.push(next_pos);
+                }
+            }
         }
     }
 
-    return min_distance_vertex;
+    result
 }
 
 fn get_next_position(pos: (i32, i32), direction: Direction) -> (i32, i32) {
@@ -115,8 +216,8 @@ fn get_next_position(pos: (i32, i32), direction: Direction) -> (i32, i32) {
 
 fn grid_value(grid: &Vec<Vec<i32>>, pos: (i32, i32)) -> Option<i32> {
     // grid[y][x]
-    if let Some(columns) = grid.get(pos.1 as usize) {
-        if let Some(value) = columns.get(pos.0 as usize) {
+    if let Some(row) = grid.get(pos.1 as usize) {
+        if let Some(value) = row.get(pos.0 as usize) {
             return Some(*value);
         }
     }
@@ -124,7 +225,7 @@ fn grid_value(grid: &Vec<Vec<i32>>, pos: (i32, i32)) -> Option<i32> {
     None
 }
 
-fn parsing(lines: &Vec<&str>) -> (Vec<Vec<i32>>, i32, (i32, i32), (i32, i32)) {
+fn parsing(lines: &Vec<&str>) -> (Vec<Vec<i32>>, i32, i32, (i32, i32), (i32, i32)) {
     let width = lines.first().unwrap().len() as i32;
     let height = lines.len() as i32;
 
@@ -157,5 +258,5 @@ fn parsing(lines: &Vec<&str>) -> (Vec<Vec<i32>>, i32, (i32, i32), (i32, i32)) {
         pos.1 += 1;
     }
 
-    (grid, width * height, start_position, target_position)
+    (grid, width, height, start_position, target_position)
 }
