@@ -6,7 +6,7 @@ pub struct DayXX {}
 
 impl DayXX {
     pub fn run() -> (String, String, String, u128, u128) {
-        let first_input = FileHandler::read("./src/inputs/day_XX_1.txt");
+        let first_input = FileHandler::read("./src/Y2022/inputs/day_XX_1.txt");
 
         let lines: Vec<&str> = first_input.split('\n').collect();
 

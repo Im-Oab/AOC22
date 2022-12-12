@@ -1,6 +1,6 @@
 pub mod file_handler;
 
-pub mod days;
+pub mod Y2022;
 
 fn main() {
     // print_result(crate::days::day_01::Day01::run());
@@ -14,7 +14,7 @@ fn main() {
     // print_result(crate::days::day_09::Day09::run());
     // print_result(crate::days::day_10::Day10::run());
     // print_result(crate::days::day_11::Day11::run());
-    print_result(crate::days::day_12::Day12::run());
+    print_result(crate::Y2022::days::day_12::Day12::run());
 }
 
 fn print_result(result: (String, String, String, u128, u128)) {
