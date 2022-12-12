@@ -42,10 +42,9 @@ impl Day12 {
     /// In the end, I implemented the BFS to solve the puzzle.
     fn part_01(lines: &Vec<&str>) -> usize {
         let (grid, width, height, start, end) = parsing(lines);
-        println!("Start: {:?}\nTarget: {:?}\n", start, end);
+
         let parents = bfs(&grid, width as usize * height as usize, start.clone());
 
-        println!("Finish bfs: {} nodes", parents.len());
         let start_index = start.1 * width + start.0;
         let end_index = end.1 * width + end.0;
         let path = construct_path(
