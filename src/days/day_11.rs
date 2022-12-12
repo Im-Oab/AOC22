@@ -177,24 +177,19 @@ impl Day11 {
 
     /// For part 1, It took me almost an hour to finish implementing the parsing input code.
     /// I create a struct of Monkey to keep the data and processing. Everything was easy after that.
-    fn part_01(lines: &Vec<&str>) -> i32 {
+    fn part_01(lines: &Vec<&str>) -> u128 {
         let mut monkeys = parse_input(lines);
 
-        for round_number in 1..=20 {
+        for _ in 1..=20 {
             round(&mut monkeys);
         }
 
         let mut total_inspected_list = monkeys.iter().map(|m| m.total_inspected).collect_vec();
         total_inspected_list.sort();
         let most_inspected_list: Vec<&u128> = total_inspected_list.iter().rev().take(2).collect();
-        let result = {
-            let mut total = 1;
-            for value in most_inspected_list.iter() {
-                total *= *value;
-            }
-            total
-        };
-        return result as i32;
+        let result = most_inspected_list.iter().map(|v| **v).product();
+
+        return result;
     }
 
     /// The difficulty of Part 2 rises very quickly because of the overflow of the value.
@@ -213,7 +208,7 @@ impl Day11 {
         //     1, 20, 30, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
         // ];
 
-        for round_number in 1..=10000 {
+        for _ in 1..=10000 {
             round_with_less_worry(&mut monkeys, common_modular);
             // if interested_round.contains(&round_number) {
 
@@ -232,13 +227,7 @@ impl Day11 {
         let mut total_inspected_list = monkeys.iter().map(|m| m.total_inspected).collect_vec();
         total_inspected_list.sort();
         let most_inspected_list: Vec<&u128> = total_inspected_list.iter().rev().take(2).collect();
-        let result = {
-            let mut total = 1;
-            for value in most_inspected_list.iter() {
-                total *= *value;
-            }
-            total
-        };
+        let result = most_inspected_list.iter().map(|v| **v).product();
 
         return result;
     }
