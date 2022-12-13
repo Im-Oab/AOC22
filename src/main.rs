@@ -5,7 +5,7 @@ pub mod Y2022;
 
 fn main() {
     // print_result(crate::Y2015::days::day_01::Day01::run());
-    print_result(crate::Y2015::days::day_02::Day02::run());
+    // print_result(crate::Y2015::days::day_02::Day02::run());
 
     // print_result(crate::Y2022::days::day_01::Day01::run());
     // print_result(crate::Y2022::days::day_02::Day02::run());
@@ -19,7 +19,7 @@ fn main() {
     // print_result(crate::Y2022::days::day_10::Day10::run());
     // print_result(crate::Y2022::days::day_11::Day11::run());
     // print_result(crate::Y2022::days::day_12::Day12::run());
-    // print_result(crate::Y2022::days::day_13::Day13::run());
+    print_result(crate::Y2022::days::day_13::Day13::run());
 }
 
 fn print_result(result: (String, String, String, u128, u128)) {
