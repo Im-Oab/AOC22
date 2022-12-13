@@ -1,10 +1,9 @@
-use std::{time::Instant, collections::VecDeque};
+use std::{collections::VecDeque, time::Instant};
 
 use hashbrown::HashMap;
 use itertools::Itertools;
 
 use crate::file_handler::FileHandler;
-
 
 pub struct Day13 {}
 
@@ -31,37 +30,52 @@ impl Day13 {
         )
     }
 
+    /// Part 1, I took a very long time to implement parsing and support nesting of the list. 
+    /// Also, I still get confused with the detail of the puzzle again.
     fn part_01(lines: &Vec<&str>) -> usize {
         let packets = parsing(lines);
-        let packets = packets.iter().map(|p| converting_raw_data(p.clone())).collect_vec();
-        
-        let mut total_right_order = 0;
-        for index in (0..packets.len()).step_by(2)
-        {
-            // println!("Pair {}:",index/2 + 1 );
-            let result = compare_data(&packets[index],&packets[index + 1]);
-            // println!("Result: {:?}\n---", result);
-            if matches!(result, CompareDataResult::TRUE)
-            {
-                total_right_order += index/2 + 1;
-            }
-            else
-            {
-                // println!("Pair: {}\n{:?}\n\n{:?}\n---\n\n", index/2 + 1, packets[index], packets[index + 1]);
-            }
-        }
-        
-        
-        return total_right_order;
+        let packets = packets
+            .iter()
+            .map(|p| converting_raw_data(p.clone()))
+            .collect_vec();
+
+        return find_total_right_orders(&packets).1;
     }
 
-    fn part_02(lines: &Vec<&str>) -> i32 {
-        return 0;
+    /// Part 2, After reading the detail, I learned how to implement it when someone guided me that sorting is the key. 
+    /// I used the function that compares two packets as a condition in sorting.
+    fn part_02(lines: &Vec<&str>) -> usize {
+        let mut packets = parsing(lines);
+        packets.push(VecDeque::from([
+            "[".to_owned(),
+            "[".to_owned(),
+            "2".to_owned(),
+            "]".to_owned(),
+            "]".to_owned(),
+        ]));
+        packets.push(VecDeque::from([
+            "[".to_owned(),
+            "[".to_owned(),
+            "6".to_owned(),
+            "]".to_owned(),
+            "]".to_owned(),
+        ]));
+        let mut packets = packets
+            .iter()
+            .map(|p| converting_raw_data(p.clone()))
+            .collect_vec();
+
+        packets.sort_by(|a, b| match compare_data(a, b) {
+            CompareDataResult::TRUE => std::cmp::Ordering::Less,
+            CompareDataResult::FALSE => std::cmp::Ordering::Greater,
+            CompareDataResult::SKIP => std::cmp::Ordering::Equal,
+        });
+
+        return find_decode_key(&packets);
     }
 }
 
-const TEST_INPUT: &str = 
-"[1,1,3,1,1]
+const TEST_INPUT: &str = "[1,1,3,1,1]
 [1,1,5,1,1]
 
 [[1],[2,3,4]]
@@ -99,88 +113,98 @@ fn test_part_2() {
     assert_eq!(result, 140);
 }
 
-#[derive(Debug, Clone)]
-enum Data
-{
+#[derive(Debug, Clone, Eq, PartialEq)]
+enum Data {
     Number(i32),
     List(VecDeque<Data>),
-    
 }
 
 #[derive(Debug, Clone)]
-enum CompareDataResult
-{
-    SKIP=0,
-    TRUE=1,
-    FALSE=-1
+enum CompareDataResult {
+    SKIP = 0,
+    TRUE = 1,
+    FALSE = -1,
 }
 
-fn compare_data(first: &Data, second: &Data) -> CompareDataResult
-{
-    // println!("\ncompare_data(): \n{:?}\n{:?}", first, second);
-    if matches!(first, Data::List(_)) && matches!(second, Data::List(_))
-    {
-        if let Data::List(mut first_list) = first.clone()
-        {
-            if let Data::List(mut second_list) = second.clone()
-            {
-                loop
-                {
-                    if first_list.len() == 0 && second_list.len() > 0
-                    {
+fn find_decode_key(packets: &Vec<Data>) -> usize {
+    let mut result = vec![];
+    for (index, data) in packets.iter().enumerate() {
+        if let Data::List(list_1) = data {
+            if list_1.len() == 1 {
+                if let Data::List(list_2) = list_1.front().unwrap() {
+                    if list_2.len() == 1 {
+                        if let Data::Number(value) = list_2.front().unwrap() {
+                            if *value == 2 || *value == 6 {
+                                result.push(index + 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    result.iter().product()
+}
+
+fn find_total_right_orders(packets: &Vec<Data>) -> (usize, usize) {
+    let mut total_right_order = 0;
+    let mut sum_of_indices = 0;
+    for index in (0..packets.len()).step_by(2) {
+        let result = compare_data(&packets[index], &packets[index + 1]);
+        if matches!(result, CompareDataResult::TRUE) {
+            total_right_order += 1;
+            sum_of_indices += index / 2 + 1;
+        }
+    }
+
+    (total_right_order, sum_of_indices)
+}
+
+fn compare_data(first: &Data, second: &Data) -> CompareDataResult {
+    if matches!(first, Data::List(_)) && matches!(second, Data::List(_)) {
+        if let Data::List(mut first_list) = first.clone() {
+            if let Data::List(mut second_list) = second.clone() {
+                loop {
+                    if first_list.len() == 0 && second_list.len() > 0 {
                         // left ran out of items
-                        // println!("True: left ran out of items\n");
+
                         return CompareDataResult::TRUE;
-                    }       
-                    else if first_list.len() > 0 && second_list.len() == 0
-                    {
+                    } else if first_list.len() > 0 && second_list.len() == 0 {
                         // right ran out of items
-                        // println!("False: right ran out of items");
+
                         return CompareDataResult::FALSE;
-                    }
-                    else if first_list.len() == 0 && second_list.len() == 0
-                    {
+                    } else if first_list.len() == 0 && second_list.len() == 0 {
                         // both ran out of item
-                        // println!("SKIP: both ran out of item\n");
+
                         return CompareDataResult::SKIP;
-                    }
-                    else
-                    {
+                    } else {
                         let first_value = first_list.pop_front().unwrap();
                         let second_value = second_list.pop_front().unwrap();
                         // both are number
-                        if let Some(result) = compare_number(&first_value, &second_value)
-                        {
-                            if matches!(result, CompareDataResult::SKIP)
-                            {
+                        if let Some(result) = compare_number(&first_value, &second_value) {
+                            if matches!(result, CompareDataResult::SKIP) {
                                 continue;
                             }
-                            // println!("{:?} compare_number()", result);
+
                             return result;
-                        }
-                        else if matches!(first_value, Data::List(_)) && matches!(second_value, Data::List(_))
+                        } else if matches!(first_value, Data::List(_))
+                            && matches!(second_value, Data::List(_))
                         {
                             // both are list. So, recursive
                             let result = compare_data(&first_value, &second_value);
-                            if matches!(result, CompareDataResult::SKIP)
-                            {
+                            if matches!(result, CompareDataResult::SKIP) {
                                 continue;
                             }
-                            
-                            // println!("{:?}: Recursive compare data: {:?} --- {:?}",result, first_value, second_value);
+
                             return result;
-                        }
-                        else
-                        {
+                        } else {
                             // first value need to put it as a list
-                            if matches!(first_value, Data::Number(_))
-                            {
+                            if matches!(first_value, Data::Number(_)) {
                                 let first_value = convert_number_to_list(&first_value);
                                 first_list.push_front(first_value);
                                 second_list.push_front(second_value);
-                            }
-                            else
-                            {
+                            } else {
                                 let second_value = convert_number_to_list(&second_value);
                                 first_list.push_front(first_value);
                                 second_list.push_front(second_value);
@@ -195,10 +219,8 @@ fn compare_data(first: &Data, second: &Data) -> CompareDataResult
     panic!("It should not be here");
 }
 
-fn convert_number_to_list(data: &Data) -> Data
-{
-    if let Data::Number(value) = data
-    {
+fn convert_number_to_list(data: &Data) -> Data {
+    if let Data::Number(value) = data {
         let mut new_list: VecDeque<Data> = VecDeque::new();
         new_list.push_back(Data::Number(*value));
         // new_list.push_back(Data::End);
@@ -208,24 +230,14 @@ fn convert_number_to_list(data: &Data) -> Data
     panic!("convert_number_to_list():: data has to be number");
 }
 
-fn compare_number(first: &Data, second: &Data) -> Option<CompareDataResult>
-{
-
-    if let Data::Number(first_value) = first
-    {
-        if let Data::Number(second_value) = second
-        {
-            // println!("Compare {} VS {}", first_value, second_value);
-            if *first_value < *second_value
-            {
+fn compare_number(first: &Data, second: &Data) -> Option<CompareDataResult> {
+    if let Data::Number(first_value) = first {
+        if let Data::Number(second_value) = second {
+            if *first_value < *second_value {
                 return Some(CompareDataResult::TRUE);
-            }
-            else if *first_value > *second_value
-            {
+            } else if *first_value > *second_value {
                 return Some(CompareDataResult::FALSE);
-            }
-            else
-            {
+            } else {
                 return Some(CompareDataResult::SKIP);
             }
         }
@@ -235,71 +247,49 @@ fn compare_number(first: &Data, second: &Data) -> Option<CompareDataResult>
     // panic!("compare_number():: Both data has to be number");
 }
 
-fn converting_raw_data(packet: VecDeque<String>) -> Data
-{
-    // println!("converting_raw_data:  {:?}", packet);
-
+fn converting_raw_data(packet: VecDeque<String>) -> Data {
     let mut packet = packet.clone();
     remove_outer_bracket(&mut packet);
-    
+
     let mut list = VecDeque::new();
-    while packet.len() > 0
-    {
+    while packet.len() > 0 {
         let first = packet.pop_front().unwrap();
-        let data = match first.parse::<i32>()
-        {
-            Ok(v) => {
-                Data::Number(v)
-            }
+        let data = match first.parse::<i32>() {
+            Ok(v) => Data::Number(v),
             Err(_) => {
-                if first == "["
-                {
+                if first == "[" {
                     let closed_index = find_closed_list_index(&packet, 0);
 
                     let mut new_list = packet.drain(..=closed_index).collect::<VecDeque<String>>();
                     new_list.push_front("[".to_owned());
-                    
+
                     converting_raw_data(new_list)
-                }
-                else
-                {
+                } else {
                     continue;
                 }
-                
             }
         };
-        
+
         list.push_back(data);
     }
     Data::List(list)
 }
 
-fn remove_outer_bracket(packet: &mut VecDeque<String>)
-{
+fn remove_outer_bracket(packet: &mut VecDeque<String>) {
     packet.pop_back();
     packet.pop_front();
 }
 
-fn find_closed_list_index(packet: &VecDeque<String>, start_index: usize) -> usize
-{
-    
+fn find_closed_list_index(packet: &VecDeque<String>, start_index: usize) -> usize {
     let mut open = 0;
-    for (index, value) in packet.iter().enumerate()
-    {
-        if index >= start_index
-        {
-            if value == "["
-            {
+    for (index, value) in packet.iter().enumerate() {
+        if index >= start_index {
+            if value == "[" {
                 open += 1;
-            }
-            else if value == "]"
-            {
-                if open > 0
-                {
+            } else if value == "]" {
+                if open > 0 {
                     open -= 1;
-                }
-                else
-                {
+                } else {
                     return index;
                 }
             }
@@ -309,46 +299,32 @@ fn find_closed_list_index(packet: &VecDeque<String>, start_index: usize) -> usiz
     panic!("find_group_range: something wrong");
 }
 
-fn parsing(lines:&Vec<&str>) -> Vec<VecDeque<String>>
-{
+fn parsing(lines: &Vec<&str>) -> Vec<VecDeque<String>> {
     let mut result = vec![];
-    for line in lines.iter()
-    {   
-        if line.len() > 0
-        {
-            let splited : Vec<char> = line.chars().map(|c|  c.to_owned()).collect_vec();
+    for line in lines.iter() {
+        if line.len() > 0 {
+            let splited: Vec<char> = line.chars().map(|c| c.to_owned()).collect_vec();
             let mut packet = VecDeque::new();
             let mut temp = String::new();
-            for c in splited.iter()
-            {
-                if *c == '['
-                {
+            for c in splited.iter() {
+                if *c == '[' {
                     packet.push_back(c.to_string());
-                }
-                else if *c == ',' || *c == ']'
-                {
-                    if temp.len() > 0
-                    {
+                } else if *c == ',' || *c == ']' {
+                    if temp.len() > 0 {
                         packet.push_back(temp.to_owned());
                         temp.clear();
                     }
-                    
 
-                    if *c == ']'
-                    {
+                    if *c == ']' {
                         packet.push_back(c.to_string());
                     }
-                    
-                }
-                else
-                {
+                } else {
                     temp.push_str(c.to_string().as_str());
                 }
             }
 
             result.push(packet)
         }
-        
     }
 
     result
