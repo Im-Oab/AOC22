@@ -30,7 +30,7 @@ impl Day13 {
         )
     }
 
-    /// Part 1, I took a very long time to implement parsing and support nesting of the list. 
+    /// Part 1, I took a very long time to implement parsing and support nesting of the list.
     /// Also, I still get confused with the detail of the puzzle again.
     fn part_01(lines: &Vec<&str>) -> usize {
         let packets = parsing(lines);
@@ -42,7 +42,7 @@ impl Day13 {
         return find_total_right_orders(&packets).1;
     }
 
-    /// Part 2, After reading the detail, I learned how to implement it when someone guided me that sorting is the key. 
+    /// Part 2, After reading the detail, I learned how to implement it when someone guided me that sorting is the key.
     /// I used the function that compares two packets as a condition in sorting.
     fn part_02(lines: &Vec<&str>) -> usize {
         let mut packets = parsing(lines);
