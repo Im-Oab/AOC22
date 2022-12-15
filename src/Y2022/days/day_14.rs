@@ -30,7 +30,7 @@ impl Day14 {
         )
     }
 
-    /// Today's puzzle is fun. It is a sand-falling simulation. It is one of the games that I would like to make one day. 
+    /// Today's puzzle is fun. It is a sand-falling simulation. It is one of the games that I would like to make one day.
     fn part_01(lines: &Vec<&str>) -> usize {
         let scan_input = parsing(lines);
 
