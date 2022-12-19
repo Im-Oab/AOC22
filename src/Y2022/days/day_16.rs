@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::file_handler::FileHandler;
 
+const TOTAL_MINUTES: i32 = 30;
 pub struct Day16 {}
 
 impl Day16 {
@@ -31,9 +32,8 @@ impl Day16 {
     }
 
     fn part_01(lines: &Vec<&str>) -> i32 {
-        let (start, graphs) = parsing(lines);
-        process(&graphs, &start);
-        return 0;
+        let (start, graph) = parsing(lines);
+        process(&graph, &"AA".to_owned())
     }
 
     fn part_02(lines: &Vec<&str>) -> i32 {
@@ -56,7 +56,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II";
 fn test_part_1() {
     let lines: Vec<&str> = TEST_INPUT.lines().collect();
     let result = Day16::part_01(&lines);
-    assert_eq!(result, 0);
+    assert_eq!(result, 1651);
 }
 
 #[test]
@@ -66,113 +66,97 @@ fn test_part_2() {
     assert_eq!(result, 0);
 }
 
-fn process(graphs: &HashMap<String, (i32, Vec<String>)>, start: &String) {
-    let mut pressure_tunnels: HashMap<String, i32> = HashMap::new();
-    let mut unopened_valves = HashSet::new();
-    for (tunnel, (rate, _)) in graphs.iter() {
-        if *rate > 0 {
-            pressure_tunnels.insert(tunnel.to_owned(), *rate);
-            unopened_valves.insert(tunnel.to_owned());
-        }
-    }
+#[test]
+fn test_calculate_releasing_pressure_from_valves() {
+    let mut opened_valves = HashMap::new();
+    opened_valves.insert("A".to_owned(), 5);
+    assert_eq!(5, calculate_releasing_pressure_from_valves(&opened_valves));
 
-    let mut opened_valves: HashMap<String, i32> = HashMap::new();
-    let mut current_tunnel = start.to_owned();
-    let mut minutes = 1;
-    let mut target_tunnel: Option<String> = None;
-    let mut moving_paths = VecDeque::new();
-    while minutes <= 30 {
-        match &target_tunnel {
-            // it will move to target tunnel and open the valve. This process cost minutes
-            Some(tunnel) => {
-                // update pressure values from all tunnels here
-
-                // if arrived at target tunnel. It have to open valve
-                if &current_tunnel == tunnel {
-                    print_step(
-                        minutes,
-                        &opened_valves,
-                        None,
-                        Some(current_tunnel.to_owned()),
-                    );
-
-                    // open valve
-                    opened_valves.insert(
-                        current_tunnel.to_owned(),
-                        *pressure_tunnels.get(&current_tunnel).unwrap(),
-                    );
-                    unopened_valves.remove(&current_tunnel);
-                    target_tunnel = None;
-
-                    
-                }
-                // it need to keep moving
-                else {
-                    if let Some(next_tunnel) = moving_paths.pop_front() {
-                        current_tunnel = next_tunnel;
-                    } else {
-                        panic!("Path should possible to reach the target tunnel");
-                    }
-
-                    print_step(
-                        minutes,
-                        &opened_valves,
-                        Some(current_tunnel.to_owned()),
-                        None,
-                    );
-                }
-
-                minutes += 1;
-            }
-            // choose target tunnel. This process will not cost minutes unless all pressured valves opened
-            None => {
-                if unopened_valves.len() > 0 {
-                    let (target, path) = look_for_target_tunnel(
-                        graphs,
-                        &unopened_valves,
-                        &pressure_tunnels,
-                        &current_tunnel,
-                        31 - minutes
-                    );
-                    target_tunnel = target;
-                    moving_paths = path;
-                } else {
-                    // update pressure valves value
-                    print_step(minutes, &opened_valves, None, None);
-                    minutes += 1;
-                }
-            }
-        }
-    }
+    opened_valves.insert("B".to_owned(), 3);
+    assert_eq!(8, calculate_releasing_pressure_from_valves(&opened_valves));
 }
 
-fn print_step(
-    minutes: i32,
-    opened_valves: &HashMap<String, i32>,
-    move_to: Option<String>,
-    open: Option<String>,
-) {
-    println!("== Minute {} ==", minutes);
-    if opened_valves.len() == 0 {
-        println!("No valves are open.");
-    } else {
-        println!(
-            "Valve {:?} is open, releasing {} pressure.",
-            opened_valves.keys(),
-            calculate_releasing_pressure(opened_valves)
-        );
-    }
+#[test]
+fn test_calculate_release_pressure_from_path() {
+    let mut path = vec![];
+    path.push(("A".to_owned(), 2, 5, (TOTAL_MINUTES - 2) * 5));
+    assert_eq!(
+        (TOTAL_MINUTES - 2) * 5,
+        calculate_release_pressure_from_path(&path)
+    );
 
-    if let Some(tunnel) = move_to {
-        println!("You move to valve {}.", tunnel);
-    }
-
-    if let Some(tunnel) = open {
-        println!("You open valve {}.", tunnel);
-    }
+    path.push(("B".to_owned(), 5, 10, (TOTAL_MINUTES - 5) * 10));
+    assert_eq!(
+        (TOTAL_MINUTES - 2) * 5 + (TOTAL_MINUTES - 5) * 10,
+        calculate_release_pressure_from_path(&path)
+    );
 }
 
-fn calculate_releasing_pressure(opened_valves: &HashMap<String, i32>) -> i32 {
+#[test]
+fn test_calculate_release_pressure_from_path_at() {
+    let mut path = vec![];
+    path.push(("A".to_owned(), 2, 5, (TOTAL_MINUTES - 2) * 5));
+    assert_eq!(
+        (3 - 2) * 5,
+        calculate_release_pressure_from_path_at(&path, 3)
+    );
+
+    path.push(("B".to_owned(), 5, 10, (TOTAL_MINUTES - 5) * 10));
+    assert_eq!(
+        (10 - 2) * 5 + (10 - 5) * 10,
+        calculate_release_pressure_from_path_at(&path, 10)
+    );
+}
+
+struct OptimalResult {
+    total_process: i32,
+    path: Vec<(String, i32, i32, i32)>,
+    travel_path: Vec<String>,
+}
+
+fn process(graph: &HashMap<String, (i32, Vec<String>)>, start: &String) -> i32 {
+    let mut optimal_result = OptimalResult {
+        total_process: 0,
+        path: vec![],
+        travel_path: vec![],
+    };
+
+    let opened_valves = HashMap::new();
+    let mut unopened_valves = HashMap::new();
+    for (valve, (flow_rate, _)) in graph.iter() {
+        if *flow_rate > 0 {
+            unopened_valves.insert(valve.to_owned(), *flow_rate);
+        }
+    }
+    // println!(
+    //     "process: {} graph size: {}\nunopened {}: {:?}\n",
+    //     start,
+    //     graph.len(),
+    //     unopened_valves.len(),
+    //     unopened_valves
+    // );
+    dfs(
+        graph,
+        &mut optimal_result,
+        &opened_valves,
+        &unopened_valves,
+        &vec![],
+        0,
+        start,
+        &vec![],
+    );
+
+    // println!(
+    //     "Result: {}\npath: {:?}\ntraveled: {:?}\n--",
+    //     calculate_release_pressure_from_path(&optimal_result.path),
+    //     optimal_result.path,
+    //     optimal_result.travel_path,
+    // );
+
+    calculate_release_pressure_from_path(&optimal_result.path)
+}
+
+fn calculate_releasing_pressure_from_valves(opened_valves: &HashMap<String, i32>) -> i32 {
     let mut total_pressure = 0;
     for (_, value) in opened_valves.iter() {
         total_pressure += *value;
@@ -181,46 +165,301 @@ fn calculate_releasing_pressure(opened_valves: &HashMap<String, i32>) -> i32 {
     total_pressure
 }
 
-fn look_for_target_tunnel(
-    graphs: &HashMap<String, (i32, Vec<String>)>,
-    unopened_valves: &HashSet<String>,
-    pressure_tunnels: &HashMap<String, i32>,
-    current_tunnel: &String,
-    minutes_left: i32,
-) -> (Option<String>, VecDeque<String>) {
-    println!("look_for_target_tunnel: {}", current_tunnel);
-    let parents = bfs(graphs, &current_tunnel);
-    let mut maximum_value = i32::MIN;
-    let mut target_tunnel = None;
-    let mut moving_paths = VecDeque::new();
-    // choose target here
-    for tunnel in unopened_valves.iter() {
-        
-        let (completed, path) = construct_path(&parents, &current_tunnel, tunnel);
-        let values = if completed == true {
-            if let Some(rate) = pressure_tunnels.get(tunnel) {
-                let cost = path.len() + 1;
-                *rate * (minutes_left - cost as i32)
-            } else {
-                println!("pressure_tunnels not exist {}", tunnel);
-                i32::MIN
-            }
+// calculate released pressure from path at TOTAL MINUTES
+fn calculate_release_pressure_from_path(path: &Vec<(String, i32, i32, i32)>) -> i32 {
+    let mut total_released_pressure = 0;
+    for (_, _, _, total_released) in path.iter() {
+        total_released_pressure += total_released;
+    }
+
+    total_released_pressure
+}
+
+fn calculate_release_pressure_from_path_at(
+    path: &Vec<(String, i32, i32, i32)>,
+    current_minutes: i32,
+) -> i32 {
+    let mut total_released_pressure = 0;
+    for (_, minutes, flow_rate, _) in path.iter() {
+        let active_minutes = current_minutes - minutes;
+        total_released_pressure += flow_rate * active_minutes;
+    }
+
+    total_released_pressure
+}
+
+fn dfs(
+    graph: &HashMap<String, (i32, Vec<String>)>,
+    optimal_result: &mut OptimalResult,
+    opened_valves: &HashMap<String, i32>,
+    unopened_valves: &HashMap<String, i32>,
+    current_path: &Vec<(String, i32, i32, i32)>,
+    minutes: i32,
+    current_node: &String,
+    travel_path: &Vec<String>,
+) {
+    /// Reach time limit.
+    if minutes > TOTAL_MINUTES || unopened_valves.len() == 0 {
+        // Is current path it the best
+        update_optimal_result(optimal_result, current_path, travel_path, minutes);
+
+        optimal_result.total_process += 1;
+
+        return;
+    }
+
+    // println!("DFS path length: {}", current_path.len());
+
+    // before continue recursive. It need to check that this it is possible that
+    // it can have result better than optimal result
+    if validate_possible_result(
+        optimal_result,
+        &opened_valves,
+        unopened_valves,
+        current_path,
+        minutes,
+    ) == false
+    {
+        return;
+    }
+
+    // recursive next node from unopened valves
+    for (valve, flow_rate) in unopened_valves.iter() {
+        let (operation_minute_cost, mut traveled_path) =
+            calculate_operation_cost(graph, current_node, valve);
+        let new_minutes = minutes + operation_minute_cost + 1;
+        // if new_minutes > TOTAL_MINUTES {
+        //     continue;
+        // }
+
+        let minutes_left = TOTAL_MINUTES - new_minutes;
+
+        let mut new_path = if minutes_left > 0 {
+            let mut new_path = current_path.clone();
+            new_path.push((
+                valve.to_owned(),
+                new_minutes,
+                *flow_rate,
+                flow_rate * minutes_left,
+            ));
+            new_path
         } else {
-            println!("Not completed path: {}\n{:?}\n", tunnel, path);
-            i32::MIN
+            current_path.clone()
         };
 
-        println!("Checking tunnel: {} value: {}", tunnel, values);
+        let mut new_travel_path = travel_path.clone();
+        new_travel_path.append(&mut traveled_path);
 
-        if values > maximum_value {
-            maximum_value = values;
-            target_tunnel = Some(tunnel.to_owned());
-            moving_paths = VecDeque::from_iter(path.into_iter());
-            println!("Found best value: {} target: {:?}", maximum_value, target_tunnel);
+        let mut new_unopened_valves = unopened_valves.clone();
+        new_unopened_valves.remove(valve);
+
+        let mut new_opened_valves = opened_valves.clone();
+        new_opened_valves.insert(valve.to_owned(), *flow_rate);
+        if optimal_result.path.len() == 0 {
+            println!("{:?}", new_path);
         }
+
+        dfs(
+            graph,
+            optimal_result,
+            &new_opened_valves,
+            &new_unopened_valves,
+            &new_path,
+            new_minutes,
+            &valve.clone(),
+            &new_travel_path,
+        );
     }
-    println!{"target: {:?}\npath:\n{:?}\n--",target_tunnel, moving_paths};
-    (target_tunnel, moving_paths)
+}
+
+fn update_optimal_result(
+    optimal_result: &mut OptimalResult,
+    current_path: &Vec<(String, i32, i32, i32)>,
+    travel_path: &Vec<String>,
+    minutes: i32,
+) {
+    if calculate_release_pressure_from_path(&optimal_result.path)
+        < calculate_release_pressure_from_path(current_path)
+        || optimal_result.path.len() == 0
+    {
+        optimal_result.path.clear();
+        optimal_result.path.append(&mut current_path.clone());
+
+        optimal_result.travel_path.clear();
+        optimal_result.travel_path.append(&mut travel_path.clone());
+
+        // println!(
+        //     "dfs END: {} minutes {} times\nrelease pressure: {}\npath: {:?}\n--\n",
+        //     optimal_result.total_process,
+        //     minutes,
+        //     calculate_release_pressure_from_path(current_path),
+        //     current_path
+        // );
+    }
+}
+
+fn calculate_operation_cost(
+    graph: &HashMap<String, (i32, Vec<String>)>,
+    start: &String,
+    target: &String,
+) -> (i32, Vec<String>) {
+    let parents = bfs(graph, start);
+    let (_, path) = construct_path(&parents, start, target);
+    // println!("calculate_operation_cost:\nstart: {} target: {}\npath: {:?}\n---\n", start, target, path);
+    (path.len() as i32, path)
+}
+
+#[test]
+fn test_validate_possible_result() {
+    let B = ("B".to_owned(), 3, 2, (TOTAL_MINUTES - 3) * 2);
+    let A = ("A".to_owned(), 15, 5, (TOTAL_MINUTES - 15) * 5);
+    let C = ("C".to_owned(), 20, 10, (TOTAL_MINUTES - 20) * 10);
+    let optimal_result = OptimalResult {
+        total_process: 0,
+        path: vec![B.clone(), A.clone(), C.clone()],
+        travel_path: vec![],
+    };
+
+    println!(
+        "Optimal Result: {}",
+        calculate_release_pressure_from_path(&optimal_result.path)
+    );
+
+    let mut opened_valves = HashMap::new();
+    let mut unopened_valves = HashMap::new();
+    unopened_valves.insert("A".to_owned(), 5);
+    unopened_valves.insert("B".to_owned(), 2);
+    unopened_valves.insert("C".to_owned(), 10);
+    assert_eq!(
+        true,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &vec![],
+            5
+        )
+    );
+    assert_eq!(
+        false,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &vec![],
+            29
+        )
+    );
+
+    opened_valves.insert("A".to_owned(), 15);
+    let mut unopened_valves = HashMap::new();
+    unopened_valves.insert("B".to_owned(), 2);
+    unopened_valves.insert("C".to_owned(), 10);
+
+    let A = ("A".to_owned(), 2, 5, (TOTAL_MINUTES - 2) * 5);
+    let mut current_path = vec![A];
+    assert_eq!(
+        true,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            5
+        )
+    );
+    assert_eq!(
+        true,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            15
+        )
+    );
+    assert_eq!(
+        true,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            20
+        )
+    );
+    assert_eq!(
+        true,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            25
+        )
+    );
+    assert_eq!(
+        false,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            26
+        )
+    );
+    assert_eq!(
+        false,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            27
+        )
+    );
+    assert_eq!(
+        false,
+        validate_possible_result(
+            &optimal_result,
+            &opened_valves,
+            &unopened_valves,
+            &current_path,
+            30
+        )
+    );
+}
+
+fn validate_possible_result(
+    optimal_result: &OptimalResult,
+    opened_valves: &HashMap<String, i32>,
+    unopened_valves: &HashMap<String, i32>,
+    current_path: &Vec<(String, i32, i32, i32)>,
+    minutes: i32,
+) -> bool {
+    let minute_left = TOTAL_MINUTES - minutes;
+    let opened_release_value = calculate_releasing_pressure_from_valves(opened_valves);
+    let unopened_release_value = calculate_releasing_pressure_from_valves(&unopened_valves);
+    let possible_value = calculate_release_pressure_from_path_at(current_path, minutes)
+        + opened_release_value * minute_left
+        + unopened_release_value * minute_left;
+
+    if calculate_release_pressure_from_path(&optimal_result.path) < possible_value {
+        // println!("validate_possible_result: TRUE {} | {}\nopened: {} / {}\n{:?}\nunopened: {} / {}\n{:?}\noptimal: {}\npath:\n{:?}\n++\n",
+        //     minutes, minute_left,
+        //     opened_release_value, opened_release_value * minute_left, opened_valves,
+        //     unopened_release_value, unopened_release_value * minute_left, unopened_valves,
+        //     calculate_release_pressure_from_path(&optimal_result.path), optimal_result.path);
+        true
+    } else {
+        // println!("validate_possible_result: FALSE {} | {}:\nopened: {} / {}\n{:?}\nunopened: {} / {}\n{:?}\ncurrent_path:\n{:?}\noptimal: {}\npath:\n{:?}\n--\n",
+        //     minutes, minute_left,
+        //     opened_release_value, opened_release_value * minute_left, opened_valves,
+        //     unopened_release_value, unopened_release_value * minute_left, unopened_valves,
+        //     current_path,
+        //     calculate_release_pressure_from_path(&optimal_result.path) , optimal_result.path);
+        false
+    }
 }
 
 fn construct_path(
@@ -228,7 +467,6 @@ fn construct_path(
     start: &String,
     target: &String,
 ) -> (bool, Vec<String>) {
-    
     let mut path = vec![];
     let mut current_node = parents.get(target);
     let mut path_completed = false;
@@ -236,13 +474,9 @@ fn construct_path(
     loop {
         match current_node {
             Some(node) => {
-                
-                
                 if node == start {
                     path_completed = true;
-                }
-                else
-                {
+                } else {
                     path.push(node.to_owned());
                 }
 
@@ -259,7 +493,7 @@ fn construct_path(
 }
 
 fn bfs(graphs: &HashMap<String, (i32, Vec<String>)>, start: &String) -> HashMap<String, String> {
-    println!("BFS: {:?}", start);
+    // println!("BFS: {:?}", start);
     let mut queue: VecDeque<String> = VecDeque::new();
     queue.push_back(start.to_owned());
     let mut visited: HashSet<String> = HashSet::new();
