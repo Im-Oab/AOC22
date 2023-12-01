@@ -8,8 +8,7 @@ fn main() {
     run_2023();
 }
 
-fn run_2023()
-{
+fn run_2023() {
     print_result(crate::Y2023::days::day_01::Day01::run());
 }
 
@@ -20,8 +19,7 @@ fn print_result(result: (String, String, String, u128, u128)) {
     );
 }
 
-
-fn run_2022(){
+fn run_2022() {
     // print_result(crate::Y2015::days::day_01::Day01::run());
     // print_result(crate::Y2015::days::day_02::Day02::run());
     // print_result(crate::Y2015::days::day_03::Day03::run());
