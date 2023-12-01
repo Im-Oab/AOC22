@@ -95,37 +95,37 @@ impl VerticalChamber {
 
     fn print(&self) {
         let mut top = self.rows.len() as i32 + 3 - 1;
-        if let Some((x1, y1, x2, y2)) = self.current_bounding_block() {
-            if top < y1 {
-                top = y1;
-            }
-        }
+        // if let Some((x1, y1, x2, y2)) = self.current_bounding_block() {
+        //     if top < y1 {
+        //         top = y1;
+        //     }
+        // }
 
-        for y in (0..=top).rev()
-        {
-            print!("|");
-            if y < self.rows.len() as i32
-            {
-                // draw existing area
-                if let Some(row) = self.rows.get(y as usize)
-                {
+        // for y in (0..=top).rev()
+        // {
+        //     print!("|");
+        //     if y < self.rows.len() as i32
+        //     {
+        //         // draw existing area
+        //         if let Some(row) = self.rows.get(y as usize)
+        //         {
 
-                }
-            }
-            println!("|");
-        }
+        //         }
+        //     }
+        //     println!("|");
+        // }
 
-        for (_, row) in self.rows.iter().rev().enumerate() {
+        // for (_, row) in self.rows.iter().rev().enumerate() {
             
-            for v in row.iter() {
-                if *v == true {
-                    print!("#");
-                } else {
-                    print!(".");
-                }
-            }
+        //     for v in row.iter() {
+        //         if *v == true {
+        //             print!("#");
+        //         } else {
+        //             print!(".");
+        //         }
+        //     }
             
-        }
+        // }
 
         println!("+-------+");
     }
