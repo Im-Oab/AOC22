@@ -37,25 +37,23 @@ impl Day01 {
     }
 
     fn get_digit_input(line: &str) -> (i32, [i32; 4]) {
-        let mut result = 0;
         let mut digit_indexes = [i32::MAX, 0, -1, 0];
+        let mut found_first = false;
         // first digit
         for (index, c) in line.chars().enumerate() {
             if let Ok(value) = String::from(c).parse::<i32>() {
-                digit_indexes[0] = index as i32;
-                digit_indexes[1] = value;
-                break;
-            }
-        }
+                if found_first == false {
+                    digit_indexes[0] = index as i32;
+                    digit_indexes[1] = value;
+                    found_first = true;
+                }
 
-        for (index, c) in line.chars().enumerate() {
-            if let Ok(value) = String::from(c).parse::<i32>() {
                 digit_indexes[2] = index as i32;
                 digit_indexes[3] = value;
             }
         }
 
-        result = (digit_indexes[1] * 10 + digit_indexes[3]) as i32;
+        let result = (digit_indexes[1] * 10 + digit_indexes[3]) as i32;
         (result, digit_indexes)
     }
 
