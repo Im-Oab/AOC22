@@ -116,7 +116,7 @@ impl VerticalChamber {
         // }
 
         // for (_, row) in self.rows.iter().rev().enumerate() {
-            
+
         //     for v in row.iter() {
         //         if *v == true {
         //             print!("#");
@@ -124,7 +124,7 @@ impl VerticalChamber {
         //             print!(".");
         //         }
         //     }
-            
+
         // }
 
         println!("+-------+");
