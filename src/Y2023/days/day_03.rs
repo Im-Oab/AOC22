@@ -1,8 +1,6 @@
 use std::time::Instant;
 
-use std::collections::HashMap;
-
-use hashbrown::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::file_handler::FileHandler;
 
@@ -37,30 +35,32 @@ impl Day03 {
 
         let mut total_sum = 0;
         for (value, coordinates) in numbers.iter() {
-            let mut found = false;
-            'next_value: for (column, row) in coordinates.iter() {
-                let neighbours = get_neighbour(*column, *row);
-                for coord in neighbours.iter() {
-                    if let Some(schm_type) = grids.get(coord) {
-                        if matches!(schm_type, ScehmaticType::Symbol(_)) == true {
-                            // found symbol
-                            total_sum += value;
-                            found = true;
-                            break 'next_value;
-                        }
-                    }
+            'next_value: for interested_coord in coordinates.iter() {
+                if Day03::check_nearby_symbols(&grids, interested_coord) == true {
+                    total_sum += value;
+                    break 'next_value;
                 }
-            }
-
-            if found == false {
-                println!(
-                    "value not use: [{}] coordinates: \n{:?}\n",
-                    value, coordinates
-                );
             }
         }
 
         total_sum
+    }
+
+    fn check_nearby_symbols(
+        grids: &HashMap<(i32, i32), ScehmaticType>,
+        interested_coord: &(i32, i32),
+    ) -> bool {
+        let (column, row) = interested_coord;
+        let neighbours = get_neighbour(*column, *row);
+        for coord in neighbours.iter() {
+            if let Some(schm_type) = grids.get(coord) {
+                if matches!(schm_type, ScehmaticType::Symbol(_)) == true {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     fn part_02(lines: &Vec<&str>) -> u128 {
@@ -69,7 +69,7 @@ impl Day03 {
         let mut reverse_numbers: HashMap<(i32, i32), i32> = HashMap::new();
         for (value, coordinates) in numbers.iter() {
             for coord in coordinates.iter() {
-                if let Some(value) = reverse_numbers.get_mut(coord) {
+                if let Some(_) = reverse_numbers.get_mut(coord) {
                 } else {
                     reverse_numbers.insert(coord.clone(), *value);
                 }
@@ -80,7 +80,7 @@ impl Day03 {
         for ((column, row), schm_type) in grids.iter() {
             if let ScehmaticType::Symbol(symbol) = schm_type {
                 if symbol == "*" {
-                    /// Warning, This has a bug when gears has same value.
+                    // Warning, This has a bug when gears has same value.
                     let mut gear_values = HashSet::new();
                     let neighbour = get_neighbour(*column, *row);
                     for coord in neighbour.iter() {
@@ -140,51 +140,6 @@ fn parsing_input(
     let numbers = get_numbers_ex(lines);
 
     (grids, numbers)
-}
-
-fn get_numbers(line: &str, row: i32) -> HashMap<(i32, i32, i32), Vec<(i32, i32)>> {
-    let mut result = HashMap::new();
-    let mut content = String::new();
-    let mut start_index = 0;
-
-    for (index, c) in line.chars().enumerate() {
-        if let Ok(_) = String::from(c).parse::<i32>() {
-            if content.len() == 0 {
-                start_index = index;
-            }
-
-            content.push_str(String::from(c).as_str());
-        } else {
-            // Has value
-            if content.len() > 0 {
-                if let Ok(value) = content.parse::<i32>() {
-                    let mut list = vec![];
-                    for column in start_index..index {
-                        list.push((column as i32, row));
-                    }
-
-                    result.insert((start_index as i32, row, value), list);
-
-                    content.clear();
-                }
-            }
-        }
-    }
-
-    // Has value
-    if content.len() > 0 {
-        if let Ok(value) = content.parse::<i32>() {
-            let mut list = vec![];
-            for column in start_index..line.len() {
-                list.push((column as i32, row));
-            }
-
-            result.insert((start_index as i32, row, value), list);
-
-            content.clear();
-        }
-    }
-    result
 }
 
 fn get_numbers_ex(lines: &Vec<&str>) -> HashMap<i32, Vec<(i32, i32)>> {
@@ -273,8 +228,6 @@ const TEST_INPUT: &str = "467..114..
 .....114..
 .....114..";
 
-const TEST_INPUT_2: &str = "";
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -283,8 +236,6 @@ mod tests {
     fn test_get_number() {
         let mut result = get_numbers_ex(&vec!["467..114..", "...467..114.5"]);
         assert_eq!(result.len(), 3);
-
-        println!("{:?}", result);
     }
 
     #[test]
