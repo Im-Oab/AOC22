@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::time::Instant;
 
 use crate::file_handler::FileHandler;
@@ -37,8 +38,6 @@ impl Day05 {
 
         data = mapping_data(lines, indexes[7] + 1, lines.len(), &data);
 
-        println!("{:?}", data);
-
         data.sort();
         return *data.first().unwrap();
     }
@@ -46,17 +45,18 @@ impl Day05 {
     fn part_02(lines: &Vec<&str>) -> u128 {
         let indexes = find_mapping_indexes(lines);
         let seeds = parsing_seeds(lines[indexes[0]]);
+        println!("Prepare seeds");
         let mut data = parsing_seed_ranges(&seeds);
 
+        println!("Start Mapping");
         for index in 1..7 {
             data = mapping_data(lines, indexes[index] + 1, indexes[index + 1] - 1, &data);
         }
 
         data = mapping_data(lines, indexes[7] + 1, lines.len(), &data);
+        println!("Finish Mapping");
 
-        data.sort();
-        // println!("{:?}", data);
-        return *data.first().unwrap();
+        return *data.par_iter().min().unwrap();
     }
 }
 
@@ -73,23 +73,17 @@ fn mapping_data(
         mappers.push(mapper);
     }
 
-    let mut result = vec![];
-    // find soil from seed
-    for data_number in data.iter() {
-        let mut mapped = false;
+    let par_iter = data.par_iter().map(|data_number| {
         for mapper in mappers.iter() {
             if let Some(soil_number) = mapper.get_destination(*data_number) {
-                result.push(soil_number);
-                mapped = true;
-                break;
+                return soil_number;
             }
         }
-        if mapped == false {
-            result.push(*data_number);
-        }
-    }
 
-    result
+        return *data_number;
+    });
+
+    par_iter.collect()
 }
 
 fn find_mapping_indexes(input: &Vec<&str>) -> Vec<usize> {
@@ -136,9 +130,11 @@ fn parsing_seed_ranges(seeds: &Vec<u128>) -> Vec<u128> {
         let start = seeds[index];
         let end = start + seeds[index + 1];
 
-        for number in start..end {
-            result.push(number);
-        }
+        let v: Vec<_> = (start..end).collect();
+        let par_iter = v.par_iter().map(|number| *number);
+        let mut data: Vec<u128> = par_iter.collect();
+
+        result.append(&mut data);
     }
 
     result
