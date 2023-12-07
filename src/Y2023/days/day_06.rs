@@ -55,21 +55,22 @@ impl Day06 {
 
 fn find_win_solutions(total_duration: u128, minimum_distance: u128) -> u128 {
     let v: Vec<_> = (0..total_duration).collect();
-    let par = v.par_iter().map(|hold_duration| {
-        let speed = hold_duration;
-        let moving_duration = total_duration - hold_duration;
-        (*hold_duration, speed * moving_duration)
-    });
+    let total_solutions = v
+        .par_iter()
+        .filter_map(|hold_duration| {
+            let speed = hold_duration;
+            let moving_duration = total_duration - hold_duration;
+            let distance = speed * moving_duration;
 
-    let solutions: Vec<(u128, u128)> = par.collect();
-    let mut win_count = 0;
-    for (_, distance) in solutions.iter() {
-        if *distance > minimum_distance {
-            win_count += 1;
-        }
-    }
+            if distance > minimum_distance {
+                Some(distance)
+            } else {
+                None
+            }
+        })
+        .count();
 
-    win_count
+    total_solutions as u128
 }
 
 fn parsing_input(lines: &Vec<&str>) -> (Vec<i32>, Vec<i32>) {
