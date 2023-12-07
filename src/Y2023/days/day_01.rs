@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::time::Instant;
 
 use crate::file_handler::FileHandler;
@@ -28,10 +29,10 @@ impl Day01 {
     }
 
     fn part_01(lines: &Vec<&str>) -> i32 {
-        let mut total_sum = 0;
-        for line in lines.iter() {
-            total_sum += Day01::get_digit_input(*line).0;
-        }
+        let total_sum = lines
+            .par_iter()
+            .map(|line| Day01::get_digit_input(*line).0)
+            .sum();
 
         total_sum
     }
@@ -58,10 +59,10 @@ impl Day01 {
     }
 
     fn part_02(lines: &Vec<&str>) -> i32 {
-        let mut total_sum = 0;
-        for line in lines.iter() {
-            total_sum += Day01::get_digit_and_letter(*line);
-        }
+        let total_sum = lines
+            .par_iter()
+            .map(|line| Day01::get_digit_and_letter(*line))
+            .sum();
 
         total_sum
     }
