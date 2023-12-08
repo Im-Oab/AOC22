@@ -150,6 +150,7 @@ impl HandType {
                     }
                 }
             } else {
+                // Transform into `Ace`
                 let a = 14;
                 counting.insert(a, total_j);
             }
