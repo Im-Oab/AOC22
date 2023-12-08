@@ -49,7 +49,6 @@ impl Day08 {
             .par_iter()
             .map(|start_value| find_total_steps(&commands, &references, start_value))
             .collect();
-        println!("{:?}", total_steps);
 
         let mut first = total_steps[0];
         for index in 1..total_steps.len() {
