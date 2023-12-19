@@ -26,7 +26,8 @@ fn run_2023() {
     // print_result(crate::Y2023::days::day_15::Day15::run());
     // print_result(crate::Y2023::days::day_16::Day16::run());
     // print_result(crate::Y2023::days::day_17::Day17::run());
-    print_result(crate::Y2023::days::day_18::Day18::run());
+    // print_result(crate::Y2023::days::day_18::Day18::run());
+    print_result(crate::Y2023::days::day_19::Day19::run());
 }
 
 fn print_result(result: (String, String, String, u128, u128)) {
