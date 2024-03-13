@@ -333,19 +333,19 @@ mod tests {
         let lines: Vec<&str> = TEST_INPUT.lines().collect();
         let (data, width, height) = parse_input(&lines);
 
-        let result = process_light(&data, width, height, (0,0), BeamDirection::Right);
+        let result = process_light(&data, width, height, (0, 0), BeamDirection::Right);
         assert_eq!(result.len(), 46);
 
         let lines: Vec<&str> = ".|...\\....".lines().collect();
         let (data, width, height) = parse_input(&lines);
 
-        let result = process_light(&data, width, height, (0,0), BeamDirection::Right);
+        let result = process_light(&data, width, height, (0, 0), BeamDirection::Right);
         assert_eq!(result.len(), 2);
 
         let lines: Vec<&str> = "..........".lines().collect();
         let (data, width, height) = parse_input(&lines);
 
-        let result = process_light(&data, width, height, (0,0), BeamDirection::Right);
+        let result = process_light(&data, width, height, (0, 0), BeamDirection::Right);
         assert_eq!(result.len(), width);
     }
 
@@ -367,7 +367,6 @@ mod tests {
         let lines: Vec<&str> = TEST_INPUT.lines().collect();
         let result = Day16::part_01(&lines);
         assert_eq!(result, 46);
-
     }
 
     #[test]
