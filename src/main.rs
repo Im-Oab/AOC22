@@ -3,9 +3,14 @@ pub mod file_handler;
 pub mod Y2015;
 pub mod Y2022;
 pub mod Y2023;
+pub mod Y2024;
 
 fn main() {
-    run_2023();
+    run_2024();
+}
+
+fn run_2024() {
+    print_result(crate::Y2024::days::day_01::Day01::run());
 }
 
 fn run_2023() {
@@ -30,7 +35,7 @@ fn run_2023() {
     // print_result(crate::Y2023::days::day_19::Day19::run());
     // print_result(crate::Y2023::days::day_20::Day20::run());
     // print_result(crate::Y2023::days::day_21::Day21::run());
-    print_result(crate::Y2023::days::day_22::Day22::run());
+    // print_result(crate::Y2023::days::day_22::Day22::run());
 }
 
 fn print_result(result: (String, String, String, u128, u128)) {
