@@ -1,7 +1,7 @@
-use std::time::Instant;
-use std::collections::{HashMap, HashSet};
-use rayon::prelude::*;
 use crate::file_handler::FileHandler;
+use rayon::prelude::*;
+use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 pub struct Day22 {}
 
@@ -63,4 +63,3 @@ mod tests {
         assert_eq!(result, 2286);
     }
 }
-

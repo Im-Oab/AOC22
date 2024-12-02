@@ -31,12 +31,12 @@ impl Day20 {
 
     fn part_01(lines: &Vec<&str>) -> i128 {
         let data = parse_input(&lines);
-        
+
         let mut data = prepare_data(&data);
         let mut total_low_pulse = 0;
         let mut total_high_pulse = 0;
-        (0..1000).for_each(|_|{
-            let (low,high) = send_pulse(&mut data);
+        (0..1000).for_each(|_| {
+            let (low, high) = send_pulse(&mut data);
             total_low_pulse += low;
             total_high_pulse += high;
         });
@@ -49,34 +49,26 @@ impl Day20 {
     }
 }
 
-fn send_pulse(modules: &mut HashMap<String, Module>) -> (i128,i128)
-{
+fn send_pulse(modules: &mut HashMap<String, Module>) -> (i128, i128) {
     let mut total_low_pulse = 0;
     let mut total_high_pulse = 0;
     let mut queue = VecDeque::new();
     queue.push_back(("button".to_owned(), "broadcaster".to_owned(), 0));
-    loop
-    {
-        if let Some((from, to, pulse)) = queue.pop_front()
-        {
+    loop {
+        if let Some((from, to, pulse)) = queue.pop_front() {
             // println!("{} -{}-> {}", from, pulse, to);
-            if pulse == 0
-            {
+            if pulse == 0 {
                 total_low_pulse += 1;
-            }
-            else
-            {
+            } else {
                 total_high_pulse += 1;
             }
-            if let Some(module) = modules.get_mut(&to)
-            {
+            if let Some(module) = modules.get_mut(&to) {
                 let new_pulses = module.process(&from, pulse);
-                new_pulses.iter().for_each(|data|{
+                new_pulses.iter().for_each(|data| {
                     queue.push_back(data.clone());
                 })
             }
-        }
-        else {
+        } else {
             break;
         }
     }
@@ -139,7 +131,7 @@ impl Module {
                         // send high pulse
                         self.destinations
                             .iter()
-                            .map(|label| (self.name.to_owned(),label.to_owned(), 1))
+                            .map(|label| (self.name.to_owned(), label.to_owned(), 1))
                             .collect()
                     }
                 } else {
@@ -244,7 +236,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_send_pulse_1000_1(){
+    fn test_send_pulse_1000_1() {
         let lines: Vec<&str> = TEST_INPUT.lines().collect();
         let data = parse_input(&lines);
         assert_eq!(data.len(), 5);
@@ -252,17 +244,17 @@ mod tests {
         let mut data = prepare_data(&data);
         let mut total_low_pulse = 0;
         let mut total_high_pulse = 0;
-        (0..1000).for_each(|_|{
-            let (low,high) = send_pulse(&mut data);
+        (0..1000).for_each(|_| {
+            let (low, high) = send_pulse(&mut data);
             total_low_pulse += low;
             total_high_pulse += high;
         });
-        
+
         assert_eq!(total_low_pulse * total_high_pulse, 32000000);
     }
 
     #[test]
-    fn test_send_pulse_1000_2(){
+    fn test_send_pulse_1000_2() {
         let lines: Vec<&str> = TEST_INPUT_2.lines().collect();
         let data = parse_input(&lines);
         assert_eq!(data.len(), 5);
@@ -270,15 +262,15 @@ mod tests {
         let mut data = prepare_data(&data);
         let mut total_low_pulse = 0;
         let mut total_high_pulse = 0;
-        (0..1000).for_each(|_|{
-            let (low,high) = send_pulse(&mut data);
+        (0..1000).for_each(|_| {
+            let (low, high) = send_pulse(&mut data);
             total_low_pulse += low;
             total_high_pulse += high;
         });
-        
+
         assert_eq!(total_low_pulse * total_high_pulse, 11687500);
     }
-    
+
     #[test]
     fn test_parse_input() {
         let lines: Vec<&str> = TEST_INPUT.lines().collect();
