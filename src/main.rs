@@ -11,7 +11,8 @@ fn main() {
 
 fn run_2024() {
     // print_result(crate::Y2024::days::day_01::Day01::run());
-    print_result(crate::Y2024::days::day_02::Day02::run());
+    // print_result(crate::Y2024::days::day_02::Day02::run());
+    print_result(crate::Y2024::days::day_03::Day03::run());
 }
 
 fn run_2023() {
